@@ -11,6 +11,7 @@ type
     host: string
     port: Port
     timeout: float
+    username: string
     password: string
     maxConns: int
 
@@ -21,15 +22,19 @@ proc newRedisConn(pool: RedisPool; taken=false): Future[RedisConn] {.async.} =
   )
   
   if (len(pool.password) != 0):
-    await result.conn.auth(pool.password)
+    if (len(pool.username) != 0):
+      await result.conn.auth(pool.username, pool.password)
+    else:
+      await result.conn.auth(pool.password)
 
-proc newRedisPool*(size: int; maxConns=10; timeout=10.0;
-                   host="localhost"; port=6379; password=""): Future[RedisPool] {.async.} =
+proc newRedisPool*(size: int; maxConns=10; timeout=10.0; host="localhost"; port=6379;
+                   username=""; password=""): Future[RedisPool] {.async.} =
   result = RedisPool(
     maxConns: maxConns,
     host: host,
     port: Port(port),
     timeout: timeout,
+    username: username,
     password: password
   )
 
